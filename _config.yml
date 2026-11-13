@@ -1,0 +1,76 @@
+# Linzer Lattice: a Jekyll theme for linked notes that read left to right.
+# Restart `jekyll serve` after changing this file.
+
+# --- Your site ---------------------------------------------------------------
+title: "Linzer Lattice"
+heading: "Linzer Lattice"
+description: "A Jekyll theme for linked notes: stacked panes, topics and threads, drawn as a lattice."
+url: "https://heseltime.github.io"   # your domain, no trailing slash
+baseurl: "/linzer-lattice"           # "" for a user site or custom domain
+
+footer:
+  copyright: "Jack Heseltine. Linzer Lattice theme, MIT"
+  credits:
+    enabled: false
+
+# --- Look --------------------------------------------------------------------
+# Ground behind the panes: trellis | lattice-dots | dawn | paper | plain
+background: paper
+
+# Torte view: how many notes it shows (the newest; the one you came from is
+# always added). Older notes stay in All notes.
+torte:
+  max_notes: 21        # wide screens
+  max_notes_small: 12  # phones
+
+# The sun menu (top left) offers this site and, if set, a parent site.
+# parent_site:
+#   title: "my home page"
+#   url: "https://example.com/"
+#   icon: "https://example.com/favicon.png"
+#   hint: "home page"
+
+favicon: "/assets/img/favicon.svg"
+apple_touch_icon: "/assets/img/apple-touch-icon.png"
+css_file: "/assets/css/style.css"
+
+# Links to notes that aren't published show as plain text with this hint.
+privatelinks:
+  title: "Private Note"
+  msg: "This note hasn't been published yet."
+
+preferences:
+  search:
+    enabled: true
+  backlinks:
+    enabled: true
+
+# Math with KaTeX: $x$ inline, $$x$$ display.
+katex: true
+
+# --- Plumbing (leave as is) -------------------------------------------------
+collections:
+  notes:
+    output: true
+    permalink: /:collection/:name
+
+defaults:
+  - scope:
+      path: ""
+      type: "notes"
+    values:
+      layout: "Post"
+      content-type: "notes"
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+exclude:
+  - _notes/Private
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - LICENSE
+  - node_modules
+  - vendor/

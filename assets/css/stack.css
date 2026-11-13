@@ -1,0 +1,1399 @@
+/* Stacked notes layout. Look follows notes.andymatuschak.org: system fonts,
+   white panes on a soft gray ground, blue links. Tokens override style.css. */
+
+:root {
+  --bg: #ffffff;
+  --bg2: #fafafc;
+  --ground: #fafafc;
+  --text: #333333;
+  --title: #333333;
+  --muted: #888888;
+  --brand: rgb(10, 132, 255);
+  --visited: rgb(175, 82, 222);
+  --border: rgba(0, 0, 0, 0.08);
+  --rule: #dadada;
+  --active: rgba(10, 132, 255, 0.15);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sidenote-width: 14rem;
+  --sidenote-gap: 2rem;
+}
+
+[data-theme="dark"] {
+  --bg: #1c1c1e;
+  --bg2: #232326;
+  --ground: #141416;
+  --text: #e3e3e6;
+  --title: #f2f2f5;
+  --muted: #8e8e93;
+  --brand: rgb(64, 156, 255);
+  --visited: rgb(191, 120, 235);
+  --border: rgba(255, 255, 255, 0.08);
+  --rule: #38383c;
+  --active: rgba(64, 156, 255, 0.22);
+}
+
+body.garden {
+  background: var(--ground);
+  font-family: var(--font);
+}
+
+/* Reading typography, per pane. */
+.pane-scroll {
+  font-size: 17px;
+  line-height: 24px;
+  color: var(--text);
+}
+
+.pane-scroll h1 {
+  font-size: 31px;
+  line-height: 36px;
+  font-weight: 600;
+  color: var(--title);
+  margin: 0 0 16px;
+}
+
+.pane-scroll .content h2 {
+  font-size: 25px;
+  line-height: 31px;
+  font-weight: normal;
+  color: var(--title);
+  margin: 1.5em 0 0.5em;
+}
+
+.pane-scroll .content h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--title);
+  margin: 1em 0 0.5em;
+}
+
+.pane-scroll .content p {
+  margin: 0 0 1em;
+}
+
+.pane-scroll .content li {
+  margin-bottom: 0.5em;
+}
+
+.pane-scroll .content a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.pane-scroll .content a:visited {
+  color: var(--visited);
+}
+
+.pane-scroll .content a:hover {
+  text-decoration: underline;
+}
+
+.pane-scroll .content pre,
+.pane-scroll .content code {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 17px;
+  background: var(--bg2);
+}
+
+.pane-scroll .content pre {
+  padding: 8px;
+  overflow-x: auto;
+  border-radius: 6px;
+}
+
+.pane-scroll .content hr {
+  height: 1px;
+  border: none;
+  background: var(--rule);
+  margin: 2em 0 1em;
+}
+
+.pane-scroll .content img {
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.stack {
+  --spine: 40px;
+  --pane-width: 40rem;
+}
+
+.topbar {
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg);
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+  z-index: 1000;
+}
+
+.topbar .nav {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.topbar .nav img {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+}
+
+/* Top bar: sun, site name, topics (notes with `topic: true`). */
+.topbar .nav {
+  justify-content: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.nav-logo {
+  display: block;
+  line-height: 0;
+  flex: 0 0 auto;
+}
+
+/* Sun menu: this site or the parent site. Opens on hover and on keyboard focus. */
+.nav-home {
+  position: relative;
+}
+
+.nav-home-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -8px;
+  min-width: 13rem;
+  padding: 6px;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+  z-index: 1100;
+}
+
+/* invisible bridge so the menu stays open while the pointer moves down */
+.nav-home-menu::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -10px;
+  height: 10px;
+}
+
+.nav-home:hover .nav-home-menu,
+.nav-home:focus-within .nav-home-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.nav-home-menu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--title);
+  font-size: 15px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-home-menu a:hover,
+.nav-home-menu a:focus-visible {
+  background: var(--active);
+  outline: none;
+}
+
+.nav-home-menu img {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.nav-home-hint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.nav-title {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--title);
+  text-decoration: none;
+}
+
+.nav-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.nav-topic {
+  font-size: 15px;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-topic:hover {
+  text-decoration: underline;
+}
+
+.nav-topic.is-current {
+  color: var(--brand);
+}
+
+/* All notes: one line per note, date on the right. */
+.all-notes {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-md) 0 0;
+}
+
+.all-notes-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.all-notes-item a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.all-notes-item a:hover {
+  text-decoration: underline;
+}
+
+.all-notes-item time {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.all-notes-topic {
+  font-size: 11px;
+  line-height: 16px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--active);
+  color: var(--title);
+}
+
+/* Links to notes that aren't published: plain words, a hint on hover. */
+.private-link {
+  color: inherit;
+  border-bottom: 1px dotted var(--muted);
+  cursor: help;
+}
+
+/* Local preview of unpublished notes. */
+.pane-scroll .content a.wiki-link.is-hidden {
+  border-bottom: 1px dashed var(--brand);
+}
+
+.hidden-banner {
+  margin: 0 0 var(--space-md);
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--active);
+  color: var(--title);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* Footnote markers shouldn't push lines apart. */
+.pane-scroll .content sup {
+  line-height: 0;
+}
+
+.pane {
+  position: relative;
+  background: var(--bg);
+}
+
+.pane-scroll {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md) var(--space-xl);
+}
+
+.pane-spine {
+  display: none;
+}
+
+.pane.is-loading .pane-scroll::before {
+  content: "Loading…";
+  display: block;
+  padding-top: var(--space-xl);
+  color: var(--text);
+  opacity: 0.6;
+}
+
+.pane-error {
+  padding-top: var(--space-xl);
+}
+
+/* The link that opened the next pane. */
+.pane-scroll a.is-trail {
+  background: var(--active);
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px var(--active);
+}
+
+@media (min-width: 800px) {
+  html,
+  body.garden {
+    height: 100%;
+  }
+
+  body.garden {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    flex: 0 0 auto;
+    padding: 6px 32px;
+  }
+
+  .topbar .nav img {
+    width: 32px;
+    height: 32px;
+    margin: 0;
+  }
+
+  .topbar .nav {
+    max-width: none;
+    margin-bottom: 0;
+  }
+
+  .stack {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+  }
+
+  .stack {
+    --pane-width: 625px;
+  }
+
+  .pane {
+    flex: 0 0 var(--pane-width);
+    width: var(--pane-width);
+    max-width: calc(100vw - 2 * var(--spine));
+    height: 100%;
+    position: sticky;
+    left: 0;
+    border-left: 1px solid var(--border);
+    transition: box-shadow 0.2s;
+  }
+
+  .stack.is-single .pane {
+    margin: 0 auto;
+    border-left: 0;
+  }
+
+  .pane + .pane.is-overlapped,
+  .pane.is-overlapped + .pane {
+    box-shadow: 0 0 15px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .pane-scroll {
+    height: 100%;
+    overflow-y: auto;
+    max-width: none;
+    padding: 32px;
+    transition: opacity 0.2s;
+  }
+
+  .pane.is-collapsed .pane-scroll {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .pane-spine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--spine);
+    padding: var(--space-md) 0;
+    writing-mode: vertical-lr;
+    text-align: left;
+    line-height: var(--spine);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 1;
+  }
+
+  .pane.is-collapsed .pane-spine {
+    display: block;
+  }
+
+  .pane-spine {
+    margin-top: 36px;
+  }
+
+  .pane-spine:hover {
+    color: var(--brand);
+  }
+
+  .pane.is-flash .pane-scroll {
+    animation: pane-flash 0.6s ease-out;
+  }
+
+  @keyframes pane-flash {
+    from { background: var(--bg2); }
+    to { background: transparent; }
+  }
+
+  .pane.is-loading .pane-scroll::before {
+    padding-top: 0;
+  }
+
+  .pane-error {
+    padding-top: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pane,
+  .pane-scroll {
+    transition: none;
+  }
+
+  .pane.is-flash .pane-scroll {
+    animation: none;
+  }
+}
+
+/* "Links to this note": a soft panel at the foot of each note, one card per
+   linking note with the paragraph the link sits in. */
+.links-section {
+  margin: var(--space-xl) -16px 0;
+  padding: 16px;
+  background: var(--ground);
+  border-radius: 16px;
+}
+
+.links-section h6 {
+  font-size: 12px;
+  line-height: 15px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 12px;
+}
+
+.backlinks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 12px;
+}
+
+.backlink {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.backlink-title {
+  display: block;
+  color: var(--title);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.backlink-title:hover {
+  color: var(--brand);
+}
+
+.backlink-context {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--muted);
+}
+
+/* Margin notes (from Markdown footnotes, see sidenotes.js). */
+.sidenote {
+  display: none;
+}
+
+.sidenote-number,
+.pane-scroll .content a.footnote {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand);
+  vertical-align: super;
+  line-height: 0;
+  text-decoration: none;
+}
+
+.sidenote-number {
+  margin-right: 4px;
+}
+
+@media (min-width: 800px) {
+  .pane.has-sidenotes {
+    flex-basis: calc(var(--pane-width) + var(--sidenote-width) + var(--sidenote-gap));
+    width: calc(var(--pane-width) + var(--sidenote-width) + var(--sidenote-gap));
+  }
+
+  .content.has-sidenotes {
+    margin-right: calc(var(--sidenote-width) + var(--sidenote-gap));
+  }
+
+  .content.has-sidenotes .footnotes {
+    display: none;
+  }
+
+  .sidenote {
+    display: block;
+    float: right;
+    clear: right;
+    width: var(--sidenote-width);
+    margin: 4px calc(-1 * (var(--sidenote-width) + var(--sidenote-gap))) 12px 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--rule);
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--muted);
+    position: relative;
+  }
+
+  .sidenote.is-flash {
+    animation: pane-flash 0.8s ease-out;
+  }
+}
+
+/* ---- The lattice -------------------------------------------------------- */
+
+/* (1) Crossings: the topics whose lines reach this note. */
+.crossings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: -8px 0 20px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.crossings-lead {
+  color: var(--muted);
+}
+
+.crossing {
+  padding: 0 8px;
+  border-radius: 10px;
+  background: var(--active);
+  color: var(--title);
+  text-decoration: none;
+}
+
+.crossing.is-far {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--active);
+  color: var(--text);
+}
+
+.crossing:hover {
+  text-decoration: underline;
+}
+
+/* (2) All notes as a lattice: a row per note (the thread runs through its
+   middle), a column per topic (a vertical line), a dot where they cross. Every
+   row has the same height and every line is drawn at the exact centre of its
+   cell, so rows, columns and dots line up. */
+.lattice {
+  --cell: 3rem;
+  --row: 40px;
+  --date: 6.5rem;
+  margin-top: var(--space-md);
+  font-size: 15px;
+}
+
+.lattice-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--date) repeat(var(--cols), var(--cell));
+  height: var(--row);
+  align-items: center;
+  /* the thread: one horizontal line through the middle of the whole row */
+  background: linear-gradient(var(--border), var(--border)) 0 50% / 100% 1px no-repeat;
+}
+
+.lattice-name,
+.lattice-date {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+}
+
+/* Title and date sit on the line with a gap in it, like beads on a thread. */
+.lattice-name a,
+.lattice-date time {
+  background: var(--bg);
+  padding-right: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.lattice-name a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.lattice-name a:hover {
+  text-decoration: underline;
+}
+
+.lattice-date {
+  justify-content: flex-end;
+  padding-right: 6px;
+}
+
+.lattice-date time {
+  padding: 0 0 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.lattice-cell,
+.lattice-topic {
+  position: relative;
+  height: 100%;
+  /* the topic: one vertical line through the middle of its column */
+  background: linear-gradient(var(--rule), var(--rule)) 50% 0 / 1px 100% no-repeat;
+}
+
+.lattice-cell.is-near::after,
+.lattice-cell.is-far::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.lattice-cell.is-far::after {
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px var(--brand);
+}
+
+/* Header: topic names stand upright at the top of their own line. */
+.lattice-head {
+  height: auto;
+  min-height: var(--row);
+  align-items: end;
+  background: none;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.lattice-colhead {
+  align-self: end;
+  padding-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.lattice-head .lattice-colhead:nth-child(2) {
+  text-align: right;
+  padding-right: 6px;
+}
+
+.lattice-topic {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 8px;
+}
+
+.lattice-topic a {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  max-height: 9rem;
+  padding: 6px 0;
+  background: var(--bg);
+  color: var(--title);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.lattice-topic a:hover {
+  color: var(--brand);
+}
+
+@media (max-width: 520px) {
+  .lattice {
+    --date: 0px;
+    --cell: 2.25rem;
+  }
+
+  .lattice-date,
+  .lattice-head .lattice-colhead:nth-child(2) {
+    visibility: hidden;
+  }
+}
+
+/* (3) The current thread, under the top bar. */
+.thread-line {
+  display: none;
+}
+
+@media (min-width: 800px) {
+  .thread-line.is-on {
+    display: block;
+    position: relative;
+    height: 10px;
+    margin: 6px 4px -4px;
+    background: linear-gradient(var(--rule), var(--rule)) center / 100% 1px no-repeat;
+  }
+
+  .thread-tick {
+    position: absolute;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--rule);
+    cursor: pointer;
+  }
+
+  .thread-tick:first-child {
+    margin-left: 0;
+  }
+
+  .thread-tick:last-child {
+    margin-left: -9px;
+  }
+
+  .thread-tick.is-crossing {
+    background: var(--brand);
+  }
+
+  .thread-tick:hover {
+    transform: scale(1.4);
+  }
+}
+
+/* (4) The ground behind the panes. Pick one with `background:` in
+   _config.yml: trellis | lattice-dots | dawn | paper | plain. */
+body.garden {
+  background-color: var(--ground);
+}
+
+:root {
+  --trellis: rgba(0, 0, 0, 0.035);
+  --ground-dot: rgba(37, 71, 86, 0.16);
+  --ground-glow: rgba(143, 214, 26, 0.24);
+  --ground-cool: rgba(10, 132, 255, 0.10);
+  --ground-spark: rgba(120, 190, 20, 0.55);
+}
+
+[data-theme="dark"] {
+  --trellis: rgba(255, 255, 255, 0.035);
+  --ground-dot: rgba(255, 255, 255, 0.10);
+  --ground-glow: rgba(182, 242, 63, 0.11);
+  --ground-cool: rgba(64, 156, 255, 0.10);
+  --ground-spark: rgba(182, 242, 63, 0.45);
+}
+
+/* trellis: fine diagonal lines */
+body.bg-trellis {
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0 23px, var(--trellis) 23px 24px),
+    repeating-linear-gradient(-45deg, transparent 0 23px, var(--trellis) 23px 24px);
+}
+
+/* lattice-dots: only the crossing points of a lattice, a few of them lime */
+body.bg-lattice-dots {
+  background-image:
+    radial-gradient(circle, var(--ground-spark) 0 2px, transparent 2.5px),
+    radial-gradient(circle, var(--ground-dot) 0 1px, transparent 1.5px);
+  background-size: 168px 168px, 24px 24px;
+  background-position: 84px 60px, 0 0;
+}
+
+/* dawn: two soft washes of light, lime from the top right, blue from below */
+body.bg-dawn {
+  background-image:
+    radial-gradient(circle at 0% 0%, var(--ground-glow), transparent 55vmax),
+    radial-gradient(circle at 100% 100%, var(--ground-cool), transparent 50vmax);
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+
+/* paper: a faint grain with a lime tint in one corner */
+body.bg-paper {
+  background-image:
+    radial-gradient(circle at 0% 0%, var(--ground-glow), transparent 40vmax),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, repeat;
+}
+
+[data-theme="dark"] body.bg-paper {
+  background-image:
+    radial-gradient(50rem 34rem at 0% 0%, var(--ground-glow), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* plain: nothing */
+
+/* (5) Grouped backlinks. */
+.backlinks-group {
+  margin: 12px 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.backlinks-group:first-of-type {
+  margin-top: 0;
+}
+
+.backlinks-topics .backlink {
+  box-shadow: inset 3px 0 0 var(--brand), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.note-emoji {
+  font-style: normal;
+}
+
+/* A note unfolding next to the page on arrival (see unfold() in stack.js). */
+@media (min-width: 800px) {
+  .pane.is-unfolding {
+    transform-origin: left center;
+    animation: pane-unfold 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .pane.is-unfolding .pane-scroll {
+    animation: pane-unfold-content 0.9s ease-out both;
+  }
+}
+
+@keyframes pane-unfold {
+  from {
+    transform: perspective(1400px) rotateY(-80deg);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    transform: perspective(1400px) rotateY(0);
+  }
+}
+
+@keyframes pane-unfold-content {
+  from, 45% {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pane.is-unfolding,
+  .pane.is-unfolding .pane-scroll {
+    animation: none;
+  }
+}
+
+/* Light / dark switch, top right of the bar: a moon in light mode, a sun in dark. */
+.nav-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.topbar .torte-toggle,
+.topbar .theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--title);
+  flex: 0 0 auto;
+}
+
+.topbar .torte-toggle,
+.topbar .theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.topbar .torte-toggle:hover,
+.topbar .theme-toggle:hover {
+  background: var(--active);
+  color: var(--brand);
+}
+
+.topbar .torte-toggle:focus-visible,
+.topbar .theme-toggle:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.topbar .torte-toggle svg,
+.topbar .theme-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.theme-toggle .icon-sun,
+[data-theme="dark"] .theme-toggle .icon-moon {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle .icon-sun {
+  display: block;
+}
+
+/* Phones: sun, name and switch on the first line, topics below. */
+@media (max-width: 600px) {
+  .topbar .nav-topics {
+    order: 5;
+    flex-basis: 100%;
+  }
+}
+
+/* Italics keep the size of the text around them. */
+.pane-scroll .content em,
+.pane-scroll .content i {
+  font-size: inherit;
+  color: inherit;
+}
+
+/* ---- Torte view (torte.js): the lattice as a flat Linzer torte ---------- */
+:root {
+  --torte-crust: #e2b06d;
+  --torte-dough: #efc78a;
+  --torte-dough-hot: #f7dcae;
+  --torte-jam: #a3203b;
+  --torte-jam-hi: #c22e47;
+  --torte-jam-lo: #7c1027;
+  --torte-ground: #fafafc;
+}
+
+[data-theme="dark"] {
+  --torte-crust: #b98547;
+  --torte-dough: #d1a368;
+  --torte-dough-hot: #e9c48f;
+  --torte-jam: #8c1a31;
+  --torte-jam-hi: #c22e47;
+  --torte-jam-lo: #5c0a1c;
+  --torte-ground: #141416;
+}
+
+html.torte-open,
+html.torte-open body {
+  overflow: hidden;
+}
+
+/* Full screen: the torte fills the window, title and close float on top. */
+.torte {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--torte-ground);
+  font-family: var(--font);
+  color: var(--text);
+}
+
+.torte[hidden] {
+  display: none;
+}
+
+.torte-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+}
+
+.torte-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--title);
+}
+
+.torte-close {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--title);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.torte-close:hover,
+.torte-close:focus-visible {
+  background: var(--active);
+  outline: none;
+}
+
+.torte-figure {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 0 16px;
+}
+
+.torte-svg {
+  display: block;
+  width: min(100%, calc(100vh - 140px));
+  height: auto;
+  max-height: 100%;
+}
+
+/* Flat: solid colours, thin jam-coloured gaps between strips, no shading. */
+.torte-crust { fill: var(--torte-crust); }
+.torte-jam { fill: var(--torte-jam); }
+
+.torte-strip {
+  fill: var(--torte-dough);
+  stroke: var(--torte-jam);
+  stroke-width: 1.2;
+  cursor: pointer;
+  transition: fill 0.12s, opacity 0.12s;
+}
+
+.torte-svg.is-hovering .torte-strip { opacity: 0.55; }
+.torte-svg.is-hovering .torte-strip.is-hot { opacity: 1; fill: var(--torte-dough-hot); }
+
+.torte-drop { fill: var(--torte-jam-hi); pointer-events: none; transition: opacity 0.12s; }
+.torte-drop.is-far { fill: var(--torte-jam-lo); }
+.torte-drop.is-self { fill: none; stroke: var(--torte-jam-hi); stroke-width: 2; }
+.torte-svg.is-hovering .torte-drop:not(.is-hot) { opacity: 0.25; }
+
+/* The label at the pointer. */
+.torte-label {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  max-width: min(22rem, calc(100vw - 24px));
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--title);
+  color: var(--bg);
+  font-size: 13px;
+  line-height: 18px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.torte-label.is-on {
+  opacity: 1;
+}
+
+.torte-label strong {
+  display: block;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.torte-label span {
+  opacity: 0.75;
+}
+
+.torte-key {
+  margin: 0;
+  padding: 10px 16px 16px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted);
+}
+
+.torte-key-drop {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin: 0 4px 0 10px;
+  border-radius: 50%;
+  vertical-align: -1px;
+  background: var(--torte-jam-hi);
+}
+
+.torte-key-drop.is-far {
+  width: 6px;
+  height: 6px;
+  background: var(--torte-jam-lo);
+}
+
+.torte-key-sep {
+  margin: 0 6px;
+}
+
+/* screen-reader / keyboard list, and the live region */
+.torte-list,
+.torte-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Laying the lattice: strips roll out one after another, then the jam drops. */
+.torte.is-shown .torte-strip {
+  transform-box: fill-box;
+  animation: torte-lay 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+.torte.is-shown .torte-note { transform-origin: 0% 50%; }
+.torte.is-shown .torte-topic { transform-origin: 50% 0%; animation-name: torte-lay-y; }
+.torte.is-shown .torte-over { animation-name: torte-fade; }
+
+.torte.is-shown .torte-drop {
+  animation: torte-fade 0.35s ease-out both;
+  animation-delay: calc(450ms + var(--i, 0) * 50ms);
+}
+
+@keyframes torte-lay { from { transform: scaleX(0); } to { transform: none; } }
+@keyframes torte-lay-y { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes torte-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .torte.is-shown .torte-strip,
+  .torte.is-shown .torte-drop {
+    animation: none;
+  }
+}
+
+/* Footer: torte and theme buttons, bottom left. */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 2px;
+  order: -1;
+}
+
+.footer-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.footer-actions button:hover,
+.footer-actions button:focus-visible {
+  background: var(--active);
+  color: var(--brand);
+  outline: none;
+}
+
+.footer-actions svg {
+  width: 18px;
+  height: 18px;
+}
+
+
+/* Lattice cells are buttons: click a crossing to see it on the torte. */
+.lattice-hit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.lattice-hit:hover,
+.lattice-hit.is-active {
+  background: radial-gradient(circle, var(--active) 0 14px, transparent 15px);
+  outline: none;
+}
+
+/* The crossing you came from, marked on the torte. */
+.torte-mark {
+  fill: none;
+  stroke: var(--bg);
+  stroke-width: 2.2;
+  pointer-events: none;
+}
+
+.torte-mark-outer {
+  fill: none;
+  stroke: var(--title);
+  stroke-width: 1.2;
+  pointer-events: none;
+}
+
+.torte.is-shown .torte-markgroup {
+  animation: torte-fade 0.3s ease-out both, torte-pulse 1.6s ease-in-out 0.9s 2;
+  animation-delay: 700ms, 900ms;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes torte-pulse {
+  50% { transform: scale(1.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .torte.is-shown .torte-markgroup { animation: none; }
+}
+
+.lattice-cell::after {
+  pointer-events: none;
+}
+
+.lattice:focus {
+  outline: none;
+}
+
+.lattice:focus-visible .lattice-hit.is-active {
+  box-shadow: 0 0 0 2px var(--brand);
+}
+
+.lattice-say {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.torte-figure:focus {
+  outline: none;
+}
+
+/* Small torte buttons: after each note name, under each topic heading. */
+.lattice-torte {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.lattice-row:hover .lattice-torte,
+.lattice-topic:hover .lattice-torte,
+.lattice-torte.is-active,
+.lattice-torte:hover {
+  opacity: 1;
+}
+
+.lattice-torte:hover,
+.lattice-torte.is-active {
+  background: var(--active);
+  color: var(--brand);
+}
+
+.lattice:focus-visible .lattice-torte.is-active {
+  box-shadow: 0 0 0 2px var(--brand);
+}
+
+.lattice-topic {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.lattice-topic .lattice-torte {
+  margin: 0;
+}
+
+@media (hover: none) {
+  .lattice-torte {
+    opacity: 0.6;
+  }
+}
+
+.torte-more a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.torte-more a:hover {
+  text-decoration: underline;
+}

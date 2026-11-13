@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+      // Set the theme before anything paints, so dark mode doesn't flash light.
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem("theme"); } catch (e) { /* private mode */ }
+        if (t !== "dark" && t !== "light") t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <meta content="{{ site.title | default: site.heading }}" property="og:site_name" />
+    <meta content="{{ site.description | default: 'A Jekyll Garden site' }}" property="og:description">
+    <meta content="{{ site.url }}/about/" property="article:author">
+    {%- if site.og_image -%}
+    <meta property="og:image" content="{{ site.baseurl }}{{ site.og_image }}">
+    {%- endif -%}
+    {%- if page.title -%}
+    <meta content="{{ page.title }}" property="og:title">
+    <meta content="article" property="og:type">
+    <meta content="{{ site.url }}{{ page.url }}" property="og:url">
+    {%- else -%}
+    <meta content="website" property="og:type">
+    <meta content="{{ site.url }}{{ page.url }}" property="og:url">
+    {%- endif -%}
+
+    <title>{%- if page.title -%}{{ page.title }} - {%- endif -%}{{ site.heading }}</title>
+    <link rel="canonical" href="{{site.url}}{{page.url}}" />
+    {%- if site.apple_touch_icon -%}
+    <link rel="apple-touch-icon" href="{{ site.baseurl }}{{ site.apple_touch_icon }}">
+    {%- endif -%}
+    {%- if site.favicon -%}
+    <link rel="icon" href="{{ site.baseurl }}{{ site.favicon }}" type="image/svg+xml" sizes="any" />
+    {%- endif -%}
+    {%- if site.css_file -%}
+    <link href="{{ site.baseurl }}{{ site.css_file }}" rel="stylesheet" media="all" class="default" />
+    {%- else -%}
+    <link href="{{ site.baseurl }}/assets/css/style.css" rel="stylesheet" media="all" class="default" />
+    {%- endif -%}
+    {%- if site.katex -%}
+    <link href="{{ site.baseurl }}/assets/css/vendor/Katex.css" rel="stylesheet" media="all" class="default" />
+    {%- endif -%}
+
+    <!--[if IE]>
+        {%- if site.ie_css -%}
+        <link href="{{ site.baseurl }}{{ site.ie_css }}" rel="stylesheet" type="text/css"/>
+        {%- else -%}
+        <link href="{{ site.baseurl }}/assets/css/ie-target.css" rel="stylesheet" type="text/css"/>
+        {%- endif -%}
+    <![endif]-->
+    <!--<link href="/assets/css/prism.css" rel="stylesheet" />-->
+    <link href="{{ site.baseurl }}/assets/css/stack.css" rel="stylesheet" media="all" />
+    {%- include GardenData.html -%}
+    <link rel="alternate" type="application/rss+xml" href="{{ site.url }}/feed.xml">
+</head>
+
+<body class="garden bg-{{ site.background | default: 'lattice-dots' }}">
+    <header class="topbar">
+        {%- include Nav.html -%}
+    </header>
+    <main class="stack"{% if page.unfold %} data-unfold="{{ page.unfold }}"{% endif %}>
+        <article class="pane">
+        <div class="pane-scroll">
+            {%- if page.published == false -%}
+            <p class="hidden-banner">Hidden: not published. Only visible in local builds with <code>--unpublished</code>.</p>
+            {%- endif -%}
+            
+            {%- if page.all_notes -%}
+                <!-- All notes: search, then every note by date -->
+                <h1>{{ page.title }}</h1>
+                {%- include Content.html -%}
+                {%- include Search.html -%}
+                {%- include AllNotes.html -%}
+            {%- elsif page.content-type == "notes" or page.content-type == "post" -%}
+                <!-- A note (topics are notes too) -->
+                <h1>{%- if page.topic and page.emoji -%}<span class="note-emoji">{{ page.emoji }}</span> {% endif -%}{{ page.title }}</h1>
+                {%- include Content.html -%}
+                {%- if site.preferences.backlinks.enabled -%}
+                {%- include Backlinks.html -%}
+                {%- endif -%}
+            {%- else -%}
+                <!-- Static page -->
+                <h1>{{ page.title }}</h1>
+                {%- include Content.html -%}
+            {%- endif -%}
+
+            {%- include Footer.html -%}
+        </div>
+        </article>
+    </main>
+    <script src="{{ site.baseurl }}/assets/js/wikilinks.js"></script>
+    <script src="{{ site.baseurl }}/assets/js/sidenotes.js"></script>
+    <script src="{{ site.baseurl }}/assets/js/lattice.js"></script>
+    <script src="{{ site.baseurl }}/assets/js/stack.js"></script>
+    <script src="{{ site.baseurl }}/assets/js/torte.js"></script>
+</body>
+</html> 
